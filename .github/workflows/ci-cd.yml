@@ -1,0 +1,118 @@
+
+name: Retail Sales Monitor - CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: retail-sales-pages
+  cancel-in-progress: false
+
+jobs:
+
+  ci:
+    name: CI - Quality, Testing and Monitoring
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+      pages: read
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip check
+
+      - name: Check code quality with Ruff
+        run: |
+          python -m ruff check scripts tests
+
+      - name: Run automated tests and coverage
+        run: |
+          python -m pytest tests/ -v \
+            --cov=scripts.validar_datos \
+            --cov-report=term-missing \
+            --cov-fail-under=90
+
+      - name: Validate sales datasets
+        run: |
+          python scripts/validar_datos.py
+
+      - name: Generate Evidently report and dashboard
+        run: |
+          python -m scripts.generar_informe
+
+      - name: Verify generated website
+        run: |
+          test -s site/index.html
+          test -s site/informe_evidently.html
+          test -s site/drift_resultados.json
+
+          echo "All website files were generated successfully."
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+          retention-days: 7
+
+      - name: CI execution summary
+        run: |
+          echo "## Retail Sales Monitor" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Code quality: Passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Automated tests: Passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Required coverage: 90%" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Data validation: Passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Monitoring report: Generated" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Website artifact: Uploaded" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+  cd:
+    name: CD - Deploy to GitHub Pages
+
+    needs: ci
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
