@@ -1,0 +1,18 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["scripts.validar_datos"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+precision = 2

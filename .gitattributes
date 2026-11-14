@@ -1,0 +1,9 @@
+*.csv text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+
+# Conservar intacto el CSV original
+datos/original/ventas_regalos_2011.csv -text

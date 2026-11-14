@@ -1,0 +1,37 @@
+# Entornos virtuales
+.venv/
+venv/
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+
+# Testing y cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Ruff
+.ruff_cache/
+
+# Credenciales y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editores
+.vscode/
+.idea/
+
+# Archivos generados automáticamente
+site/
+
+# Evidencias locales de la practica
+evidencias/
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
